@@ -1,7 +1,6 @@
 import math
 from display import *
 
-
   # IMPORANT NOTE
 
   # Ambient light is represeneted by a color value
@@ -22,19 +21,56 @@ SPECULAR_EXP = 4
 
 #lighting functions
 def get_lighting(normal, view, ambient, light, areflect, dreflect, sreflect ):
-    return [0, 0, 0]
+    Ia = calculate_ambient(ambient, areflect)
+    Id = calculate_diffuse(light, dreflect, normal)
+    Is = calculate_specular(light, sreflect, view, normal)
+
+    r = Ia[0] + Id[0] + Is[0]
+    g = Ia[1] + Id[1] + Is[1]
+    b = Ia[2] + Id[2] + Is[2]
+
+    return [int(r), int(g), int(b)]
 
 def calculate_ambient(alight, areflect):
-    pass
+    return limit_color([alight[0] * areflect[0], alight[1] * areflect[1], alight[2] * areflect[2]])
 
 def calculate_diffuse(light, dreflect, normal):
-    pass
+    normalize(normal)
+    light_pos = light[0]
+    normalize(light_pos)
+    dp = dot_product(normal, light_pos)
+
+    r = light[COLOR][0] * dreflect[0] * dp
+    g = light[COLOR][1] * dreflect[1] * dp
+    b = light[COLOR][2] * dreflect[2] * dp
+
+    return limit_color([r, g, b])
 
 def calculate_specular(light, sreflect, view, normal):
-    pass
+    normalize(normal)
+    light_pos = light[0]
+    normalize(light_pos)
+    cos = 2 * dot_product(light_pos, normal)
+    r = [(cos * normal[0]) - light_pos[0], (cos * normal[1]) - light_pos[1], (cos * normal[2]) - light_pos[2]]
+
+    dp = dot_product(r, view)
+    if dp <= 0:
+        return [0, 0, 0]
+    dp = dp ** SPECULAR_EXP
+
+    r = light[COLOR][0] * sreflect[0] * dp
+    g = light[COLOR][1] * sreflect[1] * dp
+    b = light[COLOR][2] * sreflect[2] * dp
+
+    return limit_color([r, g, b])
 
 def limit_color(color):
-    pass
+    for i in range(3):
+        if color[i] > 255:
+            color[i] = 255
+        if color[i] < 0:
+            color[i] = 0
+    return color
 
 #vector functions
 #normalize vetor, should modify the parameter
